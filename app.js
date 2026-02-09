@@ -288,51 +288,66 @@ function showNewChatModal() {
 }
 
 async function startNewChat(otherEmail) {
-    if (otherEmail === currentUser.email) {
-        alert('자기 자신과는 채팅할 수 없습니다');
-        return;
-    }
-    
-    const users = await db.collection('users').where('email', '==', otherEmail).get();
-    
-    if (users.empty) {
-        alert('사용자를 찾을 수 없습니다');
-        return;
-    }
-    
-    const otherUser = users.docs[0];
-    const otherId = otherUser.id;
-    
-    // Check if chat exists
-    const existingChat = await db.collection('chats')
-        .where('participants', 'array-contains', currentUser.uid)
-        .get();
-    
-    let chatId = null;
-    
-    for (const doc of existingChat.docs) {
-        const chat = doc.data();
-        if (chat.participants.includes(otherId)) {
-            chatId = doc.id;
-            break;
+    try {
+        console.log('Starting chat with:', otherEmail);
+        
+        if (otherEmail === currentUser.email) {
+            alert('자기 자신과는 채팅할 수 없습니다');
+            return;
         }
+        
+        const users = await db.collection('users').where('email', '==', otherEmail).get();
+        console.log('Found users:', users.size);
+        
+        if (users.empty) {
+            alert('사용자를 찾을 수 없습니다');
+            return;
+        }
+        
+        const otherUser = users.docs[0];
+        const otherId = otherUser.id;
+        console.log('Other user ID:', otherId);
+        
+        // Check if chat exists
+        const existingChat = await db.collection('chats')
+            .where('participants', 'array-contains', currentUser.uid)
+            .get();
+        
+        console.log('Existing chats:', existingChat.size);
+        
+        let chatId = null;
+        
+        for (const doc of existingChat.docs) {
+            const chat = doc.data();
+            if (chat.participants.includes(otherId)) {
+                chatId = doc.id;
+                console.log('Found existing chat:', chatId);
+                break;
+            }
+        }
+        
+        // Create new chat if not exists
+        if (!chatId) {
+            console.log('Creating new chat...');
+            const newChat = await db.collection('chats').add({
+                participants: [currentUser.uid, otherId],
+                otherEmail: otherEmail,
+                myEmail: currentUser.email,
+                lastMessage: '',
+                lastMessageTime: new Date(),
+                createdAt: new Date()
+            });
+            chatId = newChat.id;
+            console.log('Created chat:', chatId);
+        }
+        
+        await loadMessages();
+        await openChat(chatId, otherId);
+        console.log('Chat opened successfully');
+    } catch (error) {
+        console.error('Start chat error:', error);
+        alert('채팅 시작 실패: ' + error.message);
     }
-    
-    // Create new chat if not exists
-    if (!chatId) {
-        const newChat = await db.collection('chats').add({
-            participants: [currentUser.uid, otherId],
-            otherEmail: otherEmail,
-            myEmail: currentUser.email,
-            lastMessage: '',
-            lastMessageTime: new Date(),
-            createdAt: new Date()
-        });
-        chatId = newChat.id;
-    }
-    
-    await loadMessages();
-    openChat(chatId, otherId);
 }
 
 async function loadMessages() {
@@ -341,7 +356,6 @@ async function loadMessages() {
     
     const chats = await db.collection('chats')
         .where('participants', 'array-contains', currentUser.uid)
-        .orderBy('lastMessageTime', 'desc')
         .get();
     
     if (chats.empty) {
@@ -349,7 +363,14 @@ async function loadMessages() {
         return;
     }
     
-    for (const doc of chats.docs) {
+    // Sort manually
+    const chatDocs = chats.docs.sort((a, b) => {
+        const aTime = a.data().lastMessageTime?.toMillis() || 0;
+        const bTime = b.data().lastMessageTime?.toMillis() || 0;
+        return bTime - aTime;
+    });
+    
+    for (const doc of chatDocs) {
         const chat = doc.data();
         const otherId = chat.participants.find(id => id !== currentUser.uid);
         
