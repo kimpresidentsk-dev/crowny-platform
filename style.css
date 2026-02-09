@@ -1161,3 +1161,41 @@ h2 {
         padding: 0 0.5rem;
     }
 }
+@media (max-width: 768px) {
+    * {
+        box-sizing: border-box;
+    }
+    
+    body, html {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        overflow-x: hidden !important;
+    }
+    
+    .content {
+        margin: 0 !important;
+        padding: 0.5rem !important;
+        padding-top: 3.5rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .hero {
+        padding: 1rem 0.5rem !important;
+    }
+    
+    .services {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+}
+@media (max-width: 768px) {
+    .services {
+        justify-content: center !important;
+        grid-template-columns: repeat(1, 1fr) !important;
+        max-width: 100% !important;
+    }
+}
