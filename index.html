@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CROWNY PLATFORM</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-auth-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-firestore-compat.min.js"></script>
+    
+    <!-- Web3 -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAqrMOtOCVTMqzsVEJgAMq5SBrpUzgABS8",
+            authDomain: "crowny-84b84.firebaseapp.com",
+            projectId: "crowny-84b84",
+            storageBucket: "crowny-84b84.firebasestorage.app",
+            messagingSenderId: "482020243607",
+            appId: "1:482020243607:web:8b60558c7af507f4bed1d2"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        window.auth = firebase.auth();
+        window.db = firebase.firestore();
+        
+        window.THIRDWEB_CONFIG = {
+            clientId: '26c044bdfa2f575538d00945419126bf',
+            contracts: {
+                CRNY: '0xe56173b6a57680286253566B9C80Fcc175c88bE1',
+                FNC: '0x68E3aA1049F583C2f1701fefc4443e398ebF32ee',
+                CRFN: '0x396DAd0C7625a4881cA0cd444Cd80A9bbce4A054'
+            }
+        };
+    </script>
+</head>
+<body>
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="modal">
+        <div class="modal-content">
+            <h2>CROWNY</h2>
+            
+            <div id="login-form" class="auth-form">
+                <h3>로그인</h3>
+                <input type="email" id="login-email" placeholder="이메일" class="input">
+                <input type="password" id="login-password" placeholder="비밀번호" class="input">
+                <button onclick="login()" class="btn-primary">로그인</button>
+                <p>계정이 없으신가요? <a href="#" onclick="showSignup()">회원가입</a></p>
+            </div>
+            
+            <div id="signup-form" class="auth-form" style="display:none;">
+                <h3>회원가입</h3>
+                <input type="email" id="signup-email" placeholder="이메일" class="input">
+                <input type="password" id="signup-password" placeholder="비밀번호 (6자 이상)" class="input">
+                <button onclick="signup()" class="btn-primary">가입하기</button>
+                <p>이미 계정이 있으신가요? <a href="#" onclick="showLogin()">로그인</a></p>
+            </div>
+        </div>
+    </div>
+
+    <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+    
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            <h1>CROWNY</h1>
+            <p>PRESENT</p>
+        </div>
+        
+        <div class="user-info" id="user-info">
+            <p id="user-email"></p>
+            <button onclick="logout()" class="btn-logout">로그아웃</button>
+        </div>
+        
+        <nav class="nav">
+            <a href="#" onclick="showPage('today')" class="nav-item active">TODAY</a>
+            <a href="#" onclick="showPage('wallet')" class="nav-item">WALLET</a>
+            <a href="#" onclick="showPage('messenger')" class="nav-item">MESSENGER</a>
+            <a href="#" onclick="showPage('social')" class="nav-item">SOCIAL</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+        <section id="today" class="page active">
+            <div class="hero">
+                <h2>GLOBAL BEAUTIE</h2>
+                <h1>전 세계를 하나로 연결하는<br>비즈니스 플랫폼</h1>
+            </div>
+
+            <div class="services">
+                <div class="service-card" onclick="showPage('wallet')">
+                    <span class="icon">💰</span>
+                    <h3>WALLET</h3>
+                </div>
+                
+                <div class="service-card" onclick="showPage('messenger')">
+                    <span class="icon">💬</span>
+                    <h3>MESSENGER</h3>
+                </div>
+                
+                <div class="service-card" onclick="showPage('social')">
+                    <span class="icon">📸</span>
+                    <h3>SOCIAL</h3>
+                </div>
+            </div>
+        </section>
+
+        <section id="wallet" class="page">
+            <h2>💰 MY WALLET</h2>
+            <div class="wallet-info">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <div>
+                        <p><strong>주소:</strong> <span id="wallet-address"></span></p>
+                        <p id="wallet-address-full" style="font-family: monospace; font-size: 0.75rem; color: var(--accent); margin-top: 0.3rem;"></p>
+                    </div>
+                    <button onclick="copyAddress()" class="btn-copy">📋 복사</button>
+                </div>
+                
+                <div class="token-balances">
+                    <div class="token-card">
+                        <div class="token-icon">👑</div>
+                        <div class="token-info">
+                            <span class="token-name">CRNY</span>
+                            <span class="token-desc">권한</span>
+                        </div>
+                        <strong class="token-balance" id="crny-balance">0</strong>
+                    </div>
+                    
+                    <div class="token-card">
+                        <div class="token-icon">💳</div>
+                        <div class="token-info">
+                            <span class="token-name">FNC</span>
+                            <span class="token-desc">크레딧</span>
+                        </div>
+                        <strong class="token-balance" id="fnc-balance">0</strong>
+                    </div>
+                    
+                    <div class="token-card">
+                        <div class="token-icon">🎁</div>
+                        <div class="token-info">
+                            <span class="token-name">CRFN</span>
+                            <span class="token-desc">포네</span>
+                        </div>
+                        <strong class="token-balance" id="crfn-balance">0</strong>
+                    </div>
+                </div>
+                
+                <button onclick="showSendModal()" class="btn-action">전송하기</button>
+            </div>
+        </section>
+
+        <section id="messenger" class="page">
+            <h2>💬 MESSENGER</h2>
+            <button onclick="showNewChatModal()" class="btn-primary" style="margin-bottom: 1rem;">새 채팅</button>
+            
+            <div class="messenger-container">
+                <div class="chat-list" id="chat-list">
+                    <p style="padding:1rem; color:var(--accent);">채팅을 시작하세요</p>
+                </div>
+                <div class="chat-window">
+                    <div class="chat-header">
+                        <strong id="chat-username">채팅 선택</strong>
+                    </div>
+                    <div class="chat-messages" id="chat-messages"></div>
+                    <div class="chat-input">
+                        <input type="text" id="message-input" placeholder="메시지..." onkeypress="if(event.key==='Enter') sendMessage()">
+                        <button onclick="sendTokenWithMessage()" class="btn-send-token">💰</button>
+                        <button onclick="sendMessage()">전송</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="social" class="page">
+            <h2>📸 SOCIAL</h2>
+            <div class="post-create">
+                <textarea id="post-text" placeholder="무슨 생각을 하고 계신가요?"></textarea>
+                <button onclick="createPost()" class="btn-primary">게시</button>
+            </div>
+            <div class="feed" id="social-feed"></div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
