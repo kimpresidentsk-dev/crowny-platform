@@ -480,7 +480,8 @@ h2 {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 1rem;
-    max-width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
 .service-card {
@@ -1145,5 +1146,18 @@ h2 {
     
     .messenger-container {
         grid-template-columns: 1fr;
+    }
+}
+
+/* Force remove all margins on mobile */
+@media (max-width: 768px) {
+    body {
+        margin: 0;
+        padding: 0;
+    }
+    
+    .services {
+        margin: 0 auto;
+        padding: 0 0.5rem;
     }
 }
