@@ -264,11 +264,21 @@ async function loadContacts() {
 }
 
 async function startChatWithContact(email) {
-    await startNewChat(email);
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector('.tab-btn').classList.add('active');
-    document.getElementById('chats-view').style.display = 'block';
-    document.getElementById('contacts-view').style.display = 'none';
+    try {
+        await startNewChat(email);
+        
+        // Switch to chats tab
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        document.getElementById('chats-view').style.display = 'block';
+        document.getElementById('contacts-view').style.display = 'none';
+        
+        // Show messenger page
+        showPage('messenger');
+    } catch (error) {
+        console.error('Chat start error:', error);
+        alert('채팅 시작 실패');
+    }
 }
 
 function showNewChatModal() {
