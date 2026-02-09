@@ -375,7 +375,11 @@ async function openChat(chatId, otherId) {
     currentChatOtherId = otherId;
     
     const otherUser = await db.collection('users').doc(otherId).get();
-    document.getElementById('chat-username').textContent = otherUser.data().email;
+    const otherEmail = otherUser.data().email;
+    document.getElementById('chat-username').textContent = otherEmail;
+    
+    // Show chat window
+    document.querySelector('.chat-window').style.display = 'flex';
     
     // Real-time listener
     db.collection('chats').doc(chatId)
@@ -384,6 +388,10 @@ async function openChat(chatId, otherId) {
         .onSnapshot(snapshot => {
             const messagesDiv = document.getElementById('chat-messages');
             messagesDiv.innerHTML = '';
+            
+            if (snapshot.empty) {
+                messagesDiv.innerHTML = '<p style="text-align:center; color:var(--accent); padding:2rem;">메시지를 보내보세요!</p>';
+            }
             
             snapshot.forEach(doc => {
                 const msg = doc.data();
@@ -412,6 +420,8 @@ async function openChat(chatId, otherId) {
             
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         });
+    
+    console.log('Chat opened:', chatId, 'with', otherEmail);
 }
 
 async function sendMessage() {
