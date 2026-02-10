@@ -1,0 +1,13 @@
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://esm.sh https://s3.tradingview.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://polygon-rpc.com https://*.googleapis.com https://*.firebaseio.com https://crowny-84b84.firebaseapp.com https://firestore.googleapis.com https://*.firebase.google.com https://api.polygon.io wss://socket.polygon.io https://query1.finance.yahoo.com https://esm.sh https://*.thirdweb.com; font-src 'self' https://fonts.gstatic.com; frame-src 'self'"
+        }
+      ]
+    }
+  ]
+}
