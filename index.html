@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CROWNY PLATFORM</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-auth-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-firestore-compat.min.js"></script>
+    
+    <!-- Thirdweb SDK -->
+    <script type="module">
+        import { createThirdwebClient } from "https://esm.sh/@thirdweb-dev/sdk@4";
+        window.thirdwebClient = createThirdwebClient({
+            clientId: "26c044bdfa2f575538d00945419126bf"
+        });
+    </script>
+    
+    <!-- Web3 -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    
+    <!-- Lightweight Charts -->
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAqrMOtOCVTMqzsVEJgAMq5SBrpUzgABS8",
+            authDomain: "crowny-84b84.firebaseapp.com",
+            projectId: "crowny-84b84",
+            storageBucket: "crowny-84b84.firebasestorage.app",
+            messagingSenderId: "482020243607",
+            appId: "1:482020243607:web:8b60558c7af507f4bed1d2"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        window.auth = firebase.auth();
+        window.db = firebase.firestore();
+        
+        // Massive (구 Polygon.io) 실시간 CME 데이터 설정
+        window.MASSIVE_CONFIG = {
+            apiKey: 'UaNpU8hwqykC0pSPqSGYM9V5hLXtjIkX', // ✅ API Key 적용 완료!
+            enabled: true, // ✅ 실시간 활성화!
+            plan: 'Starter', // $199/월
+            symbol: 'C:NQ' // NQ E-mini 선물
+        };
+        
+        window.THIRDWEB_CONFIG = {
+            clientId: '26c044bdfa2f575538d00945419126bf',
+            contracts: {
+                CRNY: '0xe56173b6a57680286253566B9C80Fcc175c88bE1',
+                FNC: '0x68E3aA1049F583C2f1701fefc4443e398ebF32ee',
+                CRFN: '0x396DAd0C7625a4881cA0cd444Cd80A9bbce4A054'
+            }
+        };
+    </script>
+</head>
+<body>
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="modal">
+        <div class="modal-content">
+            <h2>CROWNY</h2>
+            
+            <div id="login-form" class="auth-form">
+                <h3>로그인</h3>
+                <input type="email" id="login-email" placeholder="이메일" class="input">
+                <input type="password" id="login-password" placeholder="비밀번호" class="input">
+                <button onclick="login()" class="btn-primary">로그인</button>
+                <p>계정이 없으신가요? <a href="#" onclick="showSignup()">회원가입</a></p>
+            </div>
+            
+            <div id="signup-form" class="auth-form" style="display:none;">
+                <h3>회원가입</h3>
+                <input type="email" id="signup-email" placeholder="이메일" class="input">
+                <input type="password" id="signup-password" placeholder="비밀번호 (6자 이상)" class="input">
+                <button onclick="signup()" class="btn-primary">가입하기</button>
+                <p>이미 계정이 있으신가요? <a href="#" onclick="showLogin()">로그인</a></p>
+            </div>
+        </div>
+    </div>
+
+    <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+    
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            <h1>CROWNY</h1>
+            <p>PRESENT</p>
+        </div>
+        
+        <div class="user-info" id="user-info">
+            <p id="user-email"></p>
+            <button onclick="logout()" class="btn-logout">로그아웃</button>
+        </div>
+        
+        <nav class="nav">
+            <a href="#" onclick="showPage('today')" class="nav-item active">TODAY</a>
+            <a href="#" onclick="showPage('wallet')" class="nav-item">WALLET</a>
+            <a href="#" onclick="showPage('messenger')" class="nav-item">MESSENGER</a>
+            <a href="#" onclick="showPage('social')" class="nav-item">SOCIAL</a>
+            <a href="#" onclick="showPage('prop-trading')" class="nav-item">PROP TRADING</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+        <section id="today" class="page active">
+            <div class="hero">
+                <h2>GLOBAL BEAUTIE</h2>
+                <h1>전 세계를 하나로 연결하는<br>비즈니스 플랫폼</h1>
+            </div>
+
+            <div class="services">
+                <div class="service-card" onclick="showPage('wallet')">
+                    <span class="icon">💰</span>
+                    <h3>WALLET</h3>
+                </div>
+                
+                <div class="service-card" onclick="showPage('messenger')">
+                    <span class="icon">💬</span>
+                    <h3>MESSENGER</h3>
+                </div>
+                
+                <div class="service-card" onclick="showPage('social')">
+                    <span class="icon">📸</span>
+                    <h3>SOCIAL</h3>
+                </div>
+                
+                <div class="service-card" onclick="showPage('prop-trading')">
+                    <span class="icon">📊</span>
+                    <h3>PROP TRADING</h3>
+                </div>
+            </div>
+            
+            <div style="background:var(--bg); padding:1.5rem; border-radius:12px; margin-top:2rem;">
+                <h3 style="margin-bottom:1rem; font-size:1.1rem;">💡 크라우니 시작하기</h3>
+                <div style="line-height:2; font-size:0.9rem;">
+                    <p>✅ <strong>자동 생성된 지갑</strong>으로 바로 시작</p>
+                    <p>✅ <strong>가스비 무료</strong> (크라우니 지갑)</p>
+                    <p>✅ <strong>3가지 토큰</strong>: CRNY, FNC, CRFN</p>
+                    <p>✅ 메신저로 <strong>토큰 전송</strong> 가능</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="wallet" class="page">
+            <h2>💰 MY WALLET</h2>
+            
+            <!-- Wallet Selector -->
+            <div style="background:var(--bg); padding:1rem; border-radius:8px; margin-bottom:1rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                    <strong>내 지갑 목록</strong>
+                    <button onclick="showAddWalletModal()" class="btn-copy">➕ 추가</button>
+                </div>
+                <select id="wallet-selector" onchange="switchWallet()" style="width:100%; padding:0.8rem; border-radius:6px; border:1px solid var(--border); font-size:0.9rem;">
+                    <!-- Wallets will be loaded here -->
+                </select>
+            </div>
+            
+            <div class="wallet-info">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <div style="flex:1;">
+                        <p><strong>주소:</strong> <span id="wallet-address"></span></p>
+                        <p id="wallet-address-full" style="font-family: monospace; font-size: 0.75rem; color: var(--accent); margin-top: 0.3rem;"></p>
+                        <p id="wallet-type" style="font-size: 0.7rem; color: var(--accent); margin-top: 0.3rem;"></p>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                        <button onclick="copyAddress()" class="btn-copy">📋 복사</button>
+                        <a id="polygonscan-link" href="#" target="_blank" class="btn-copy" style="text-decoration:none; text-align:center; display:block;">🔍 확인</a>
+                        <button onclick="deleteCurrentWallet()" class="btn-copy" style="background:var(--accent); color:white;">🗑️ 삭제</button>
+                    </div>
+                </div>
+                
+                <div id="gas-subsidy-info" style="background:var(--bg); padding:0.8rem; border-radius:8px; margin-bottom:1rem; display:none;">
+                    <p style="margin:0; font-size:0.85rem;">
+                        ⛽ 가스비 대납: <strong id="total-gas-subsidy">0</strong> MATIC
+                    </p>
+                </div>
+                
+                <div class="token-balances">
+                    <div class="token-card" onclick="selectToken('crny')" id="token-card-crny">
+                        <div class="token-icon">👑</div>
+                        <div class="token-info">
+                            <span class="token-name">CRNY</span>
+                            <span class="token-desc">권한</span>
+                        </div>
+                        <strong class="token-balance" id="crny-balance">0</strong>
+                    </div>
+                    
+                    <div class="token-card" onclick="selectToken('fnc')" id="token-card-fnc">
+                        <div class="token-icon">💳</div>
+                        <div class="token-info">
+                            <span class="token-name">FNC</span>
+                            <span class="token-desc">크레딧</span>
+                        </div>
+                        <strong class="token-balance" id="fnc-balance">0</strong>
+                    </div>
+                    
+                    <div class="token-card" onclick="selectToken('crfn')" id="token-card-crfn">
+                        <div class="token-icon">🎁</div>
+                        <div class="token-info">
+                            <span class="token-name">CRFN</span>
+                            <span class="token-desc">포네</span>
+                        </div>
+                        <strong class="token-balance" id="crfn-balance">0</strong>
+                    </div>
+                </div>
+                
+                <button onclick="showSendModal()" class="btn-action">선택한 토큰 전송</button>
+            </div>
+        </section>
+
+        <section id="messenger" class="page">
+            <h2>💬 MESSENGER</h2>
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                <button onclick="showNewChatModal()" class="btn-primary">새 채팅</button>
+                <button onclick="showAddContactModal()" class="btn-secondary">연락처 추가</button>
+            </div>
+            
+            <div class="messenger-container">
+                <div class="chat-sidebar">
+                    <div class="sidebar-tabs">
+                        <button class="tab-btn active" onclick="showChats()">채팅</button>
+                        <button class="tab-btn" onclick="showContacts()">연락처</button>
+                    </div>
+                    
+                    <div id="chats-view" class="sidebar-content">
+                        <div id="chat-list"></div>
+                    </div>
+                    
+                    <div id="contacts-view" class="sidebar-content" style="display:none;">
+                        <div id="contact-list"></div>
+                    </div>
+                </div>
+                
+                <div class="chat-window">
+                    <div class="chat-header">
+                        <strong id="chat-username">채팅 선택</strong>
+                    </div>
+                    <div class="chat-messages" id="chat-messages"></div>
+                    <div class="chat-input">
+                        <input type="text" id="message-input" placeholder="메시지..." onkeypress="if(event.key==='Enter') sendMessage()">
+                        <button onclick="sendTokenWithMessage()" class="btn-send-token">💰</button>
+                        <button onclick="sendMessage()">전송</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="social" class="page">
+            <h2>📸 SOCIAL</h2>
+            <div class="post-create">
+                <textarea id="post-text" placeholder="무슨 생각을 하고 계신가요?"></textarea>
+                <input type="file" id="post-image" accept="image/*" style="margin:0.5rem 0; padding:0.5rem; border:1px solid var(--border); border-radius:6px; width:100%;">
+                <button onclick="createPost()" class="btn-primary">📤 게시</button>
+            </div>
+            <div class="feed" id="social-feed"></div>
+        </section>
+
+        <!-- Prop Trading Page -->
+        <section id="prop-trading" class="page">
+            <h2>📊 PROP TRADING</h2>
+            
+            <div style="background:var(--bg); padding:1.5rem; border-radius:12px; margin-bottom:1.5rem;">
+                <h3 style="margin-bottom:1rem;">💡 프랍 트레이딩 규칙</h3>
+                <div style="line-height:1.8; font-size:0.9rem;">
+                    <p><strong>👑 슬롯 시스템:</strong> CRNY 보유량에 따라 MNQ 계약 수 자동 결정</p>
+                    <p><strong>📊 거래 가능:</strong> MNQ (Micro E-mini Nasdaq-100)</p>
+                    <p><strong>🚨 일일 한도:</strong> -$100 손실 시 당일 거래 정지</p>
+                    <p><strong>💀 누적 청산:</strong> -$2,000 손실 시 CRNY 1개 소각</p>
+                    <p><strong>⏰ 정산:</strong> EOD (End of Day) 기준</p>
+                    <p><strong>💎 상금:</strong> 매일 인출 가능 (CRFN 토큰)</p>
+                    <p><strong>🎫 참가비:</strong> 1 CRNY</p>
+                </div>
+            </div>
+            
+            <!-- Trading Dashboard (참가 후 표시) -->
+            <div id="trading-dashboard" style="display:none; margin-bottom:2rem;">
+                
+                <!-- === 슬롯 상태 패널 (NEW) === -->
+                <div id="slot-status-panel" style="background:linear-gradient(135deg, #1a1a2e, #16213e); color:white; padding:1.5rem; border-radius:12px; margin-bottom:1rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                        <h3 style="margin:0; font-size:1.1rem;">👑 내 슬롯 상태</h3>
+                        <span id="slot-status-badge" style="padding:0.3rem 0.8rem; border-radius:20px; font-size:0.8rem; font-weight:bold; background:#00c853; color:white;">활성</span>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; text-align:center;">
+                        <div>
+                            <p style="font-size:0.75rem; opacity:0.7; margin-bottom:0.3rem;">보유 CRNY</p>
+                            <strong style="font-size:1.8rem;" id="slot-crny-count">0</strong>
+                        </div>
+                        <div>
+                            <p style="font-size:0.75rem; opacity:0.7; margin-bottom:0.3rem;">활성 슬롯</p>
+                            <strong style="font-size:1.8rem; color:#00e5ff;" id="slot-active-count">0</strong>
+                        </div>
+                        <div>
+                            <p style="font-size:0.75rem; opacity:0.7; margin-bottom:0.3rem;">MNQ 계약</p>
+                            <strong style="font-size:1.8rem; color:#ffd740;" id="slot-contract-count">0</strong>
+                        </div>
+                    </div>
+                    <p id="slot-status-message" style="text-align:center; margin-top:0.8rem; font-size:0.85rem; opacity:0.8;">CRNY를 보유하면 슬롯이 활성화됩니다</p>
+                </div>
+
+                <!-- === 리스크 게이지 (NEW) === -->
+                <div style="background:white; padding:1.5rem; border-radius:12px; margin-bottom:1rem;">
+                    <h4 style="margin-bottom:1rem;">⚠️ 리스크 현황</h4>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
+                        <!-- 일일 손실 게이지 -->
+                        <div>
+                            <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:0.3rem;">
+                                <span>오늘 손익</span>
+                                <span id="daily-loss-text" style="font-weight:bold;">$0 / -$100</span>
+                            </div>
+                            <div style="background:#e0e0e0; border-radius:10px; height:12px; overflow:hidden;">
+                                <div id="daily-loss-bar" style="background:#4caf50; height:100%; width:0%; border-radius:10px; transition:width 0.5s, background 0.5s;"></div>
+                            </div>
+                        </div>
+                        <!-- 누적 손실 게이지 -->
+                        <div>
+                            <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:0.3rem;">
+                                <span>누적 손익</span>
+                                <span id="cumulative-loss-text" style="font-weight:bold;">$0 / -$2,000</span>
+                            </div>
+                            <div style="background:#e0e0e0; border-radius:10px; height:12px; overflow:hidden;">
+                                <div id="cumulative-loss-bar" style="background:#4caf50; height:100%; width:0%; border-radius:10px; transition:width 0.5s, background 0.5s;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 일일 한도 경고 메시지 -->
+                    <div id="daily-limit-warning" style="display:none; background:#ffebee; color:#c62828; padding:0.8rem; border-radius:6px; margin-top:1rem; text-align:center; font-weight:bold;">
+                        ⚠️ 오늘의 거래가 종료되었습니다. 내일 다시 도전하세요!
+                    </div>
+                </div>
+
+                <!-- 기존: 계좌 정보 -->
+                <div style="background:white; padding:1.5rem; border-radius:12px; margin-bottom:1rem;">
+                    <h3>💼 내 트레이딩 계좌</h3>
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-top:1rem;">
+                        <div style="text-align:center;">
+                            <p style="font-size:0.8rem; color:var(--accent);">계좌 잔액</p>
+                            <strong style="font-size:1.5rem;" id="trading-balance">$10,000</strong>
+                        </div>
+                        <div style="text-align:center;">
+                            <p style="font-size:0.8rem; color:var(--accent);">수익률</p>
+                            <strong style="font-size:1.5rem; color:green;" id="trading-profit">+0%</strong>
+                        </div>
+                        <div style="text-align:center;">
+                            <p style="font-size:0.8rem; color:var(--accent);">포지션</p>
+                            <strong style="font-size:1.5rem;" id="trading-positions">0</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Lightweight Charts -->
+                <div style="background:white; padding:1rem; border-radius:12px; margin-bottom:1rem;">
+                    <div style="background:#e3f2fd; padding:0.8rem; border-radius:6px; margin-bottom:1rem; border-left:4px solid #2196f3;">
+                        <strong>📊 실시간 NQ 데이터</strong>
+                        <p style="font-size:0.85rem; margin:0.5rem 0 0 0;">
+                            • 현재: Yahoo Finance (15분 지연, 무료)<br>
+                            • 실시간: Massive API 활성화 가능 ($199/월)<br>
+                            • Massive API Key 입력 → 즉시 실시간 전환!
+                        </p>
+                    </div>
+                    <div id="tradingview-chart" style="height:400px;"></div>
+                    
+                    <!-- Chart Quick Trade Buttons -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem; margin-top:1rem;">
+                        <button id="btn-chart-buy" onclick="quickChartTrade('BUY')" style="background:#0066cc; color:white; padding:0.8rem; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
+                            차트 BUY
+                        </button>
+                        <button id="btn-chart-sell" onclick="quickChartTrade('SELL')" style="background:#cc0000; color:white; padding:0.8rem; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
+                            차트 SELL
+                        </button>
+                        <button onclick="drawPositionLinesLW()" style="background:#666; color:white; padding:0.8rem; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
+                            🔄 새로고침
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Trading Controls -->
+                <div style="background:white; padding:1.5rem; border-radius:12px;">
+                    <h4 style="margin-bottom:1rem;">💹 나스닥100 선물 거래</h4>
+                    
+                    <!-- Contract + Slot Info (CHANGED: 계약 수 입력 → 슬롯 자동 표시) -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                        <div>
+                            <label style="font-size:0.85rem;">상품</label>
+                            <select id="futures-contract" onchange="updateContractSpecs()" style="width:100%; padding:0.8rem; border-radius:6px; margin-top:0.3rem;">
+                                <option value="MNQ" selected>MNQ (Micro E-mini Nasdaq-100)</option>
+                                <option value="NQ">NQ (E-mini Nasdaq-100)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:0.85rem;">슬롯 계약 수 (자동)</label>
+                            <div id="slot-contracts-display" style="width:100%; padding:0.8rem; border-radius:6px; margin-top:0.3rem; background:var(--bg); font-weight:bold; text-align:center; font-size:1.1rem;">
+                                0 계약
+                            </div>
+                            <!-- Hidden: 기존 호환용 -->
+                            <input type="hidden" id="trade-contracts" value="1">
+                        </div>
+                    </div>
+                    
+                    <!-- Order Type Selection -->
+                    <div style="margin-bottom:1rem;">
+                        <label style="font-size:0.85rem; display:block; margin-bottom:0.3rem;">주문 타입</label>
+                        <select id="order-type" onchange="toggleOrderInputs()" style="width:100%; padding:0.8rem; border-radius:6px;">
+                            <option value="MARKET">시장가 (Market)</option>
+                            <option value="LIMIT">지정가 (Limit)</option>
+                            <option value="STOP">손절 (Stop Market)</option>
+                            <option value="STOP_LIMIT">손절 지정가 (Stop Limit)</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Price Inputs (for Limit/Stop orders) -->
+                    <div id="price-inputs" style="display:none; margin-bottom:1rem;">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                            <div id="limit-price-div">
+                                <label style="font-size:0.85rem;">지정가</label>
+                                <input type="number" id="limit-price" step="0.25" style="width:100%; padding:0.8rem; border-radius:6px; margin-top:0.3rem;">
+                            </div>
+                            <div id="stop-price-div" style="display:none;">
+                                <label style="font-size:0.85rem;">손절가</label>
+                                <input type="number" id="stop-price" step="0.25" style="width:100%; padding:0.8rem; border-radius:6px; margin-top:0.3rem;">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Stop Loss / Take Profit -->
+                    <div style="background:var(--bg); padding:1rem; border-radius:6px; margin-bottom:1rem;">
+                        <label style="display:flex; align-items:center; margin-bottom:0.5rem;">
+                            <input type="checkbox" id="use-sl-tp" onchange="toggleSLTP()">
+                            <span style="margin-left:0.5rem; font-weight:bold;">손절/익절 자동 설정</span>
+                        </label>
+                        <div id="sl-tp-inputs" style="display:none; margin-top:1rem;">
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                                <div>
+                                    <label style="font-size:0.85rem;">손절 (포인트)</label>
+                                    <input type="number" id="stop-loss-points" placeholder="50" value="50" style="width:100%; padding:0.8rem; border-radius:6px; margin-top:0.3rem;">
+                                </div>
+                                <div>
+                                    <label style="font-size:0.85rem;">익절 (포인트)</label>
+                                    <input type="number" id="take-profit-points" placeholder="100" value="100" style="width:100%; padding:0.8rem; border-radius:6px; margin-top:0.3rem;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Current Price Display with Ticks -->
+                    <div style="margin:1rem 0; padding:1rem; background:var(--bg); border-radius:6px;">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:0.8rem;">
+                            <div>
+                                <div style="font-size:0.75rem; color:var(--accent); margin-bottom:0.3rem;">현재가</div>
+                                <strong id="current-nq-price" style="font-size:1.3rem;">-</strong>
+                            </div>
+                            <div>
+                                <div style="font-size:0.75rem; color:var(--accent); margin-bottom:0.3rem;">틱 크기</div>
+                                <strong id="tick-size" style="font-size:1.3rem;">0.25</strong>
+                            </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; padding-top:0.8rem; border-top:1px solid var(--border);">
+                            <div>
+                                <div style="font-size:0.75rem; color:var(--accent);">포인트당 가치</div>
+                                <div id="point-value" style="font-size:0.9rem; font-weight:bold;">$20</div>
+                            </div>
+                            <div>
+                                <div style="font-size:0.75rem; color:var(--accent);">틱당 가치</div>
+                                <div id="tick-value" style="font-size:0.9rem; font-weight:bold;">$5</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Buy/Sell Buttons -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                        <button id="btn-buy" onclick="executeFuturesTrade('BUY')" style="background:#0066cc; color:white; padding:1.2rem; border:none; border-radius:6px; cursor:pointer; font-size:1.1rem; font-weight:bold;">
+                            📈 BUY
+                        </button>
+                        <button id="btn-sell" onclick="executeFuturesTrade('SELL')" style="background:#cc0000; color:white; padding:1.2rem; border:none; border-radius:6px; cursor:pointer; font-size:1.1rem; font-weight:bold;">
+                            📉 SELL
+                        </button>
+                    </div>
+                    
+                    <!-- Quick Close All -->
+                    <button onclick="closeAllPositions()" style="width:100%; margin-top:1rem; background:var(--accent); color:white; padding:1rem; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
+                        🚨 전체 포지션 청산
+                    </button>
+                </div>
+                
+                <!-- Open Positions -->
+                <div style="background:white; padding:1.5rem; border-radius:12px; margin-top:1rem;">
+                    <h4 style="margin-bottom:1rem;">📊 오픈 포지션</h4>
+                    <div id="open-positions"></div>
+                </div>
+                
+                <!-- Trade History -->
+                <div style="background:white; padding:1.5rem; border-radius:12px; margin-top:1rem;">
+                    <h4 style="margin-bottom:1rem;">📋 거래 내역</h4>
+                    <div id="trade-history"></div>
+                </div>
+            </div>
+            
+            <!-- Challenges List -->
+            <div id="trading-challenges"></div>
+            
+            <div style="text-align:center; margin-top:2rem;">
+                <button onclick="showCreateChallenge()" class="btn-primary">➕ 새 챌린지 생성</button>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
