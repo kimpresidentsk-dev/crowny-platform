@@ -1563,8 +1563,8 @@ function updateTradingUI() {
 
 function initTradingViewChart() {
     // Lightweight Charts 초기화
-    const container = document.getElementById('tradingview-chart');
-    
+    const chart = LightweightCharts.createChart(container, {
+        
     if (!container) {
         console.error('❌ 차트 컨테이너 없음');
         return;
